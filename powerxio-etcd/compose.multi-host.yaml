@@ -33,7 +33,7 @@ services:
       - "2379:2379"
       - "2380:2380"
     volumes:
-      - etcd-1-data:/etcd-data
+      - ${ETCD_DATA_ROOT:?set ETCD_DATA_ROOT}/etcd-1:/etcd-data
 
   powerxio-etcd-2:
     <<: *etcd-common
@@ -47,7 +47,7 @@ services:
       - "12379:2379"
       - "12380:2380"
     volumes:
-      - etcd-2-data:/etcd-data
+      - ${ETCD_DATA_ROOT:?set ETCD_DATA_ROOT}/etcd-2:/etcd-data
 
   powerxio-etcd-3:
     <<: *etcd-common
@@ -61,9 +61,4 @@ services:
       - "2379:2379"
       - "2380:2380"
     volumes:
-      - etcd-3-data:/etcd-data
-
-volumes:
-  etcd-1-data:
-  etcd-2-data:
-  etcd-3-data:
+      - ${ETCD_DATA_ROOT:?set ETCD_DATA_ROOT}/etcd-3:/etcd-data
