@@ -4,7 +4,7 @@
 
 ## 两台机器部署（A 上两个节点，B 上一个节点）
 
-将此目录放到两台机器，在两台机器上都复制 `.env.example` 为 `.env`，把 `ETCD_HOST_A_IP`、`ETCD_HOST_B_IP` 换成真实、互相可访问的宿主机 IP。两台机器的 IP 配置必须相同。无需修改 `/etc/hosts`，节点使用 IP 互连。
+将此目录放到两台机器，在两台机器上都复制 `.env.example` 为 `.env`。`ETCD_HOST_A_IP` 始终填写运行节点 1、2 的机器 IP，`ETCD_HOST_B_IP` 始终填写运行节点 3 的机器 IP；**两台机器的这两项必须相同，不能在 B 上对调**。无需修改 `/etc/hosts`，节点使用 IP 互连。
 
 `ETCD_DATA_ROOT` 指定各机器上的宿主机数据根目录，示例为 `/data/powerxio-etcd`。机器 A 使用其下的 `etcd-1`、`etcd-2`，机器 B 使用 `etcd-3`；容器内统一挂载到 `/etcd-data`。可以在两台机器分别设置不同的数据根目录。Docker Compose 会创建尚不存在的宿主机目录。
 
