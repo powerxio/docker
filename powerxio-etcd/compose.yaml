@@ -3,7 +3,7 @@ name: powerxio-etcd
 # 机器 A 使用 --profile host-a；机器 B 使用 --profile host-b。
 x-etcd-common: &etcd-common
   build: .
-  image: powerxio-etcd:v3.7.4
+  image: powerxio-etcd:v3.6.11
   user: "10001:10001"
   restart: unless-stopped
   healthcheck:

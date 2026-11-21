@@ -1,4 +1,4 @@
-FROM gcr.io/etcd-development/etcd:v3.7.4
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/gcr.io/etcd-development/etcd:v3.6.11
 
 EXPOSE 2379 2380
 
