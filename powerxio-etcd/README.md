@@ -1,6 +1,6 @@
 # powerxio-etcd
 
-3 节点 etcd 集群，使用静态引导。每个节点的数据保存在独立的 Docker volume 中。
+3 节点 etcd 集群，使用静态引导。机器 A 运行两个节点，机器 B 运行一个节点。两台机器使用相同的 `compose.yaml`，通过 Compose profile 选择本机运行的节点。
 
 ## 两台机器部署（A 上两个节点，B 上一个节点）
 
@@ -19,8 +19,8 @@
 ```sh
 cp .env.example .env
 # 将 .env 中的两个示例 IP 和 ETCD_DATA_ROOT 改为实际值
-docker compose -f compose.multi-host.yaml --profile host-a up -d --build
-docker compose -f compose.multi-host.yaml --profile host-a ps
+docker compose --profile host-a up -d --build
+docker compose --profile host-a ps
 ```
 
 机器 B 执行（使用与 A 相同的 `.env` 内容）：
@@ -28,14 +28,14 @@ docker compose -f compose.multi-host.yaml --profile host-a ps
 ```sh
 cp .env.example .env
 # 将 .env 中的两个示例 IP 和 ETCD_DATA_ROOT 改为实际值
-docker compose -f compose.multi-host.yaml --profile host-b up -d --build
-docker compose -f compose.multi-host.yaml --profile host-b ps
+docker compose --profile host-b up -d --build
+docker compose --profile host-b ps
 ```
 
 集群检查（在机器 A 上执行，IP 替换为实际值）：
 
 ```sh
-docker compose -f compose.multi-host.yaml --profile host-a exec powerxio-etcd-1 /usr/local/bin/etcdctl \
+docker compose --profile host-a exec powerxio-etcd-1 /usr/local/bin/etcdctl \
   --endpoints=http://192.168.1.11:2379,http://192.168.1.11:12379,http://192.168.1.12:2379 \
   endpoint health
 ```
@@ -46,22 +46,4 @@ docker compose -f compose.multi-host.yaml --profile host-a exec powerxio-etcd-1 
 
 上述 IP 仅为示例。各节点首次启动时应使用相同的集群成员列表；已有数据卷的节点重启时会读取原有成员信息。
 
-## 单台机器部署（同机三节点）
-
-```sh
-docker compose up -d --build
-docker compose ps
-docker compose exec powerxio-etcd-1 /usr/local/bin/etcdctl \
-  --endpoints=http://powerxio-etcd-1:2379,http://powerxio-etcd-2:2379,http://powerxio-etcd-3:2379 \
-  endpoint health
-```
-
-在同一个 Docker 网络 `powerxio-network` 中，客户端使用以下地址连接：
-
-```text
-http://powerxio-etcd-1:2379,http://powerxio-etcd-2:2379,http://powerxio-etcd-3:2379
-```
-
-宿主机仅在本机监听 `32379`、`12379`、`22379`，可用于本机调试。节点对外通告的是 Docker 网络内的名称；需要从其他机器连接时，应另行配置可从客户端和节点互相访问的地址及 TLS。
-
-`docker compose down` 会保留数据卷。只有在确定要删除所有集群数据时才使用 `docker compose down -v`。
+`docker compose down` 不会删除绑定在宿主机的 etcd 数据目录。集群成员和地址写在 `compose.yaml` 的 `ETCD_INITIAL_CLUSTER` 中；节点启动后若需变更成员，应使用 etcd 的成员管理命令，而不是只改初始集群配置。
