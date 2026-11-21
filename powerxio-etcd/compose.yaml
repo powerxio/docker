@@ -1,0 +1,71 @@
+name: powerxio-etcd
+
+x-etcd-common: &etcd-common
+  build: .
+  image: powerxio-etcd:v3.7.4
+  restart: unless-stopped
+  networks:
+    - powerxio-network
+  healthcheck:
+    test: ["CMD", "/usr/local/bin/etcdctl", "--endpoints=http://127.0.0.1:2379", "endpoint", "health"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 30s
+
+x-etcd-env: &etcd-env
+  ETCD_DATA_DIR: /etcd-data
+  ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+  ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+  ETCD_INITIAL_CLUSTER: powerxio-etcd-1=http://powerxio-etcd-1:2380,powerxio-etcd-2=http://powerxio-etcd-2:2380,powerxio-etcd-3=http://powerxio-etcd-3:2380
+  ETCD_INITIAL_CLUSTER_STATE: new
+  ETCD_INITIAL_CLUSTER_TOKEN: powerxio-etcd-cluster-1
+
+services:
+  powerxio-etcd-1:
+    <<: *etcd-common
+    hostname: powerxio-etcd-1
+    environment:
+      <<: *etcd-env
+      ETCD_NAME: powerxio-etcd-1
+      ETCD_ADVERTISE_CLIENT_URLS: http://powerxio-etcd-1:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://powerxio-etcd-1:2380
+    ports:
+      - "127.0.0.1:32379:2379"
+    volumes:
+      - etcd-1-data:/etcd-data
+
+  powerxio-etcd-2:
+    <<: *etcd-common
+    hostname: powerxio-etcd-2
+    environment:
+      <<: *etcd-env
+      ETCD_NAME: powerxio-etcd-2
+      ETCD_ADVERTISE_CLIENT_URLS: http://powerxio-etcd-2:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://powerxio-etcd-2:2380
+    ports:
+      - "127.0.0.1:12379:2379"
+    volumes:
+      - etcd-2-data:/etcd-data
+
+  powerxio-etcd-3:
+    <<: *etcd-common
+    hostname: powerxio-etcd-3
+    environment:
+      <<: *etcd-env
+      ETCD_NAME: powerxio-etcd-3
+      ETCD_ADVERTISE_CLIENT_URLS: http://powerxio-etcd-3:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://powerxio-etcd-3:2380
+    ports:
+      - "127.0.0.1:22379:2379"
+    volumes:
+      - etcd-3-data:/etcd-data
+
+volumes:
+  etcd-1-data:
+  etcd-2-data:
+  etcd-3-data:
+
+networks:
+  powerxio-network:
+    name: powerxio-network

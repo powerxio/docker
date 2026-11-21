@@ -1,0 +1,69 @@
+name: powerxio-etcd
+
+# 机器 A 使用 --profile host-a；机器 B 使用 --profile host-b。
+x-etcd-common: &etcd-common
+  build: .
+  image: powerxio-etcd:v3.7.4
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD", "/usr/local/bin/etcdctl", "--endpoints=http://127.0.0.1:2379", "endpoint", "health"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 30s
+
+x-etcd-env: &etcd-env
+  ETCD_DATA_DIR: /etcd-data
+  ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+  ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+  ETCD_INITIAL_CLUSTER: powerxio-etcd-1=http://${ETCD_HOST_A_IP:?set ETCD_HOST_A_IP}:2380,powerxio-etcd-2=http://${ETCD_HOST_A_IP:?set ETCD_HOST_A_IP}:12380,powerxio-etcd-3=http://${ETCD_HOST_B_IP:?set ETCD_HOST_B_IP}:2380
+  ETCD_INITIAL_CLUSTER_STATE: new
+  ETCD_INITIAL_CLUSTER_TOKEN: powerxio-etcd-cluster-1
+
+services:
+  powerxio-etcd-1:
+    <<: *etcd-common
+    profiles: [host-a]
+    environment:
+      <<: *etcd-env
+      ETCD_NAME: powerxio-etcd-1
+      ETCD_ADVERTISE_CLIENT_URLS: http://${ETCD_HOST_A_IP:?set ETCD_HOST_A_IP}:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://${ETCD_HOST_A_IP:?set ETCD_HOST_A_IP}:2380
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    volumes:
+      - etcd-1-data:/etcd-data
+
+  powerxio-etcd-2:
+    <<: *etcd-common
+    profiles: [host-a]
+    environment:
+      <<: *etcd-env
+      ETCD_NAME: powerxio-etcd-2
+      ETCD_ADVERTISE_CLIENT_URLS: http://${ETCD_HOST_A_IP:?set ETCD_HOST_A_IP}:12379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://${ETCD_HOST_A_IP:?set ETCD_HOST_A_IP}:12380
+    ports:
+      - "12379:2379"
+      - "12380:2380"
+    volumes:
+      - etcd-2-data:/etcd-data
+
+  powerxio-etcd-3:
+    <<: *etcd-common
+    profiles: [host-b]
+    environment:
+      <<: *etcd-env
+      ETCD_NAME: powerxio-etcd-3
+      ETCD_ADVERTISE_CLIENT_URLS: http://${ETCD_HOST_B_IP:?set ETCD_HOST_B_IP}:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://${ETCD_HOST_B_IP:?set ETCD_HOST_B_IP}:2380
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    volumes:
+      - etcd-3-data:/etcd-data
+
+volumes:
+  etcd-1-data:
+  etcd-2-data:
+  etcd-3-data:
