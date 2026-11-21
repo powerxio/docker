@@ -4,7 +4,7 @@ name: powerxio-etcd
 x-etcd-common: &etcd-common
   build: .
   image: powerxio-etcd:v3.7.4
-  user: "${POWERX_UID:?set POWERX_UID to id -u powerx}:${POWERX_GID:?set POWERX_GID to id -g powerx}"
+  user: "10001:10001"
   restart: unless-stopped
   healthcheck:
     test: ["CMD", "/usr/local/bin/etcdctl", "--endpoints=http://127.0.0.1:2379", "endpoint", "health"]

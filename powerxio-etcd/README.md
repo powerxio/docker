@@ -8,19 +8,19 @@
 
 `ETCD_DATA_ROOT` 指定各机器上的宿主机数据根目录，示例为 `/data/powerxio-etcd`。机器 A 使用其下的 `etcd-1`、`etcd-2`，机器 B 使用 `etcd-3`；容器内统一挂载到 `/etcd-data`。可以在两台机器分别设置不同的数据根目录。Docker Compose 会创建尚不存在的宿主机目录。
 
-容器以宿主机 `powerx` 用户的 UID/GID 运行。分别在两台机器执行 `id -u powerx`、`id -g powerx`，把结果填写到各自 `.env` 的 `POWERX_UID`、`POWERX_GID`。两台机器的 UID/GID 可以不同。启动前确保对应的数据子目录归 `powerx` 所有并可写；对于示例数据路径，可执行：
+容器进程固定使用 UID/GID `10001:10001`，与其他 PowerxIO 服务一致。启动前确保对应的数据子目录由 `10001:10001` 拥有并可写。若目录中已有数据，先停止对应容器再调整属主。对于示例数据路径，可执行：
 
 ```sh
 # 机器 A
 sudo mkdir -p /data/powerxio-etcd/etcd-1 /data/powerxio-etcd/etcd-2
-sudo chown -R "$(id -u powerx):$(id -g powerx)" /data/powerxio-etcd/etcd-1 /data/powerxio-etcd/etcd-2
+sudo chown -R 10001:10001 /data/powerxio-etcd/etcd-1 /data/powerxio-etcd/etcd-2
 
 # 机器 B
 sudo mkdir -p /data/powerxio-etcd/etcd-3
-sudo chown -R "$(id -u powerx):$(id -g powerx)" /data/powerxio-etcd/etcd-3
+sudo chown -R 10001:10001 /data/powerxio-etcd/etcd-3
 ```
 
-如使用其他 `ETCD_DATA_ROOT`，把命令中的 `/data/powerxio-etcd` 换成实际路径。修改运行中容器的 UID/GID 后，需要执行 `docker compose up -d --force-recreate`，单独执行 `restart` 不会应用新用户配置。
+如使用其他 `ETCD_DATA_ROOT`，把命令中的 `/data/powerxio-etcd` 换成实际路径。更新镜像和容器用户配置时，需执行 `docker compose up -d --build --force-recreate`；单独执行 `restart` 不会应用新配置。
 
 | 机器 | 节点 | 宿主机客户端端口 | 宿主机节点通信端口 |
 | --- | --- | --- | --- |
@@ -32,16 +32,16 @@ sudo chown -R "$(id -u powerx):$(id -g powerx)" /data/powerxio-etcd/etcd-3
 
 ```sh
 cp .env.example .env
-# 将 .env 中的两个示例 IP、ETCD_DATA_ROOT、POWERX_UID、POWERX_GID 改为实际值
+# 将 .env 中的两个示例 IP 和 ETCD_DATA_ROOT 改为实际值
 docker compose --profile host-a up -d --build
 docker compose --profile host-a ps
 ```
 
-机器 B 执行（两项 IP 与 A 相同；UID/GID 和数据路径按本机填写）：
+机器 B 执行（两项 IP 与 A 相同；数据路径按本机填写）：
 
 ```sh
 cp .env.example .env
-# 将 .env 中的两个示例 IP、ETCD_DATA_ROOT、POWERX_UID、POWERX_GID 改为实际值
+# 将 .env 中的两个示例 IP 和 ETCD_DATA_ROOT 改为实际值
 docker compose --profile host-b up -d --build
 docker compose --profile host-b ps
 ```
